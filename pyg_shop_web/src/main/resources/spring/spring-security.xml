@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+			 xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+						http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+	<!--匿名访问-->
+	<http pattern="/*.html" security="none"></http>
+	<http pattern="/seller/add.do" security="none"></http>
+
+	<http pattern="/css/**" security="none"></http>
+	<http pattern="/js/**" security="none"></http>
+	<http pattern="/img/**" security="none"></http>
+	<http pattern="/plugins/**" security="none"></http>
+
+	<!--拦截规则  use-expressions="true" 默认-->
+	<http use-expressions="false">
+		<intercept-url pattern="/**" access="ROLE_SELLER"></intercept-url>
+		<!--
+			default-target-url 登陆成功后默认跳转的页面 如果没指定，原来访问哪个页面，登陆后还回到哪个页面
+			always-use-default-target 一直跳转到目标页
+			authentication-failure-url 如果不指定，默认回到登陆页，如果指定，登陆失败后就回到该页面
+		-->
+		<form-login login-page="/shoplogin.html" default-target-url="/admin/index.html" always-use-default-target="true"
+		 	authentication-failure-url="/shoplogin.html" ></form-login>
+		<csrf disabled="true"></csrf>
+		<headers>
+			<!--请求头信息中有frame-options 默认的是deny 拒绝 SAMEORIGIN同源 协议 ip 端口号 ALLOW-FROM-->
+			<frame-options policy="SAMEORIGIN"></frame-options>
+		</headers>
+		<!--logout LogoutFilter起作用   logout-success-url默认登出成功后跳转到登陆页-->
+		<logout logout-success-url="/shoplogin.html"></logout>
+	</http>
+
+	<!--认证管理器-->
+	<authentication-manager>
+		<authentication-provider user-service-ref="userDetailsServiceImpl">
+			<password-encoder ref="passwordEncoder"></password-encoder>
+			<!--<user-service>
+				<user name="admin" password="123456" authorities="ROLE_ADMIN"></user>
+				<user name="dasheng" password="wukong" authorities="ROLE_ADMIN"></user>
+			</user-service>-->
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></beans:bean>
+
+	<!--<beans:bean name="userDetailsServiceImpl" class="com.pyg.shop.service.impl.UserDetailsServiceImpl">
+		<beans:property name="sellerService" ref="sellerService"></beans:property>
+	</beans:bean>
+
+	&lt;!&ndash;通过配置的方式实现@reference 得到接口的实现类&ndash;&gt;
+	<dubbo:application name="pyg_shop_web"/>
+	<dubbo:registry address="zookeeper://192.168.25.128:2181"/>
+	<dubbo:reference id="sellerService" interface="com.pyg.sellergoods.service.SellerService"></dubbo:reference>-->
+
+
+	<dubbo:application name="pyg_shop_web"/>
+	<dubbo:registry address="zookeeper://192.168.127.145:2181"/>
+	<dubbo:annotation package="com.pyg.shop.service"/>
+</beans:beans>
